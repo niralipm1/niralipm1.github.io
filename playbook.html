@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Android Production & Publishing Playbook | Nirali Motka</title>
+  <meta name="description" content="A complete, end-to-end engineering guide to configuring, hardening, signing, and publishing modern Android applications to the Google Play Store from scratch.">
+  <meta name="author" content="Nirali Motka">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0E14;
+      --surface: #141923;
+      --surface-elevated: #1B2232;
+      --border: #232D3F;
+      --border-accent: #2E3B52;
+      --text-main: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --text-dim: #6B7280;
+      --accent: #CDF22B;
+      --accent-glow: rgba(205, 242, 43, 0.15);
+      --accent-secondary: #00F5D4;
+      --accent-indigo: #6366F1;
+      --accent-orange: #FF9F0A;
+      --accent-rose: #F43F5E;
+      --code-bg: #0E121B;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation Header */
+    header.site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 14, 20, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-badge {
+      background: var(--surface-elevated);
+      color: var(--accent);
+      border: 1px solid var(--border-accent);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-back {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-back:hover {
+      color: var(--accent);
+    }
+
+    .doc-badge {
+      background: rgba(0, 245, 212, 0.12);
+      color: var(--accent-secondary);
+      border: 1px solid rgba(0, 245, 212, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* Main Layout */
+    .docs-layout {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      min-height: calc(100vh - 65px);
+    }
+
+    /* Sidebar Table of Contents */
+    aside.sidebar {
+      position: sticky;
+      top: 65px;
+      height: calc(100vh - 65px);
+      overflow-y: auto;
+      padding: 32px 20px;
+      border-right: 1px solid var(--border);
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 14px;
+      padding-left: 10px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text-main);
+      background: var(--surface);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      background: var(--accent-glow);
+      font-weight: 700;
+    }
+
+    .step-number {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      min-width: 20px;
+    }
+
+    .sidebar-nav a.active .step-number {
+      color: var(--accent);
+    }
+
+    /* Content Area */
+    main.content {
+      padding: 48px 60px 100px;
+      max-width: 980px;
+    }
+
+    /* Hero Banner inside Docs */
+    .doc-hero {
+      margin-bottom: 50px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 36px;
+    }
+
+    .doc-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .doc-title {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+      line-height: 1.25;
+      background: linear-gradient(135deg, #FFFFFF 0%, #E5E7EB 50%, #9CA3AF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .doc-lead {
+      font-size: 17px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* Section Styles */
+    section.doc-section {
+      margin-bottom: 60px;
+      scroll-margin-top: 90px;
+    }
+
+    h2.section-heading {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-main);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .heading-num {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      color: var(--accent);
+      background: var(--accent-glow);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(205, 242, 43, 0.3);
+    }
+
+    h3.sub-heading {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 28px 0 12px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    p {
+      color: #D1D5DB;
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    /* Callout Alerts */
+    .callout {
+      border-radius: var(--radius-md);
+      padding: 18px 22px;
+      margin: 22px 0;
+      border: 1px solid;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .callout-icon {
+      font-size: 18px;
+      line-height: 1;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .callout-security {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: #FECDD3;
+    }
+
+    .callout-tip {
+      background: rgba(205, 242, 43, 0.08);
+      border-color: rgba(205, 242, 43, 0.3);
+      color: #E2E8F0;
+    }
+
+    .callout-tip strong {
+      color: var(--accent);
+    }
+
+    .callout-info {
+      background: rgba(99, 102, 241, 0.08);
+      border-color: rgba(99, 102, 241, 0.3);
+      color: #E0E7FF;
+    }
+
+    /* Code Blocks */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin: 20px 0;
+      overflow: hidden;
+      font-family: var(--font-mono);
+    }
+
+    .code-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .code-lang {
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .btn-copy {
+      background: var(--surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-accent);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-copy:hover {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+    }
+
+    pre {
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #E5E7EB;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    code {
+      font-family: var(--font-mono);
+    }
+
+    p code, li code {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    /* Tables */
+    .table-responsive {
+      overflow-x: auto;
+      margin: 22px 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--surface);
+      padding: 12px 18px;
+      color: var(--text-main);
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      color: #D1D5DB;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Interactive Checklist */
+    .checklist {
+      list-style: none;
+      margin: 18px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+
+    .checklist-item:hover {
+      border-color: var(--border-accent);
+    }
+
+    .checklist-item input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    footer.doc-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 36px;
+      margin-top: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      .docs-layout {
+        grid-template-columns: 1fr;
+      }
+      aside.sidebar {
+        display: none;
+      }
+      main.content {
+        padding: 32px 20px 80px;
+      }
+      .doc-title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand-logo">
+        <span class="logo-badge">&lt;NM/&gt;</span>
+        <span>Nirali Motka</span>
+      </a>
+
+      <div class="nav-actions">
+        <span class="doc-badge">PRODUCTION PLAYBOOK</span>
+        <a href="index.html" class="btn-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to Portfolio
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Docs Layout -->
+  <div class="docs-layout">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section-title">Playbook Chapters</div>
+      <ul class="sidebar-nav">
+        <li><a href="#ch1" class="active"><span class="step-number">01</span> Package Architecture</a></li>
+        <li><a href="#ch2"><span class="step-number">02</span> Keystore &amp; Keytool</a></li>
+        <li><a href="#ch3"><span class="step-number">03</span> Gradle Secrets Vault</a></li>
+        <li><a href="#ch4"><span class="step-number">04</span> Security &amp; Permissions</a></li>
+        <li><a href="#ch5"><span class="step-number">05</span> Firebase Telemetry</a></li>
+        <li><a href="#ch6"><span class="step-number">06</span> ASO Algorithm Mastery</a></li>
+        <li><a href="#ch7"><span class="step-number">07</span> Visual Assets Matrix</a></li>
+        <li><a href="#ch8"><span class="step-number">08</span> Console Verification</a></li>
+        <li><a href="#ch9"><span class="step-number">09</span> AAB Build &amp; Rollout</a></li>
+      </ul>
+
+      <div class="sidebar-section-title" style="margin-top: 36px;">Quick Tools</div>
+      <ul class="sidebar-nav">
+        <li><a href="#checklist"><span class="step-number">✓</span> Release Checklist</a></li>
+        <li><a href="#troubleshooting"><span class="step-number">!</span> Common Traps</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+
+      <!-- Hero Section -->
+      <div class="doc-hero">
+        <div class="doc-meta">
+          <span>Author: <strong>Nirali Motka</strong></span>
+          <span>•</span>
+          <span>Platform: <strong>Android (API 24 - 36)</strong></span>
+          <span>•</span>
+          <span>Updated: <strong>November 2026</strong></span>
+        </div>
+        <h1 class="doc-title">Android Production &amp; Google Play Publishing Playbook</h1>
+        <p class="doc-lead">
+          The definitive, battle-tested engineering blueprint for taking an Android app from local source code to verified, production-grade release on the Google Play Store with zero credential leaks and 100% policy compliance.
+        </p>
+      </div>
+
+      <!-- Chapter 1 -->
+      <section class="doc-section" id="ch1">
+        <h2 class="section-heading">
+          <span class="heading-num">01</span> Identity &amp; Package Architecture
+        </h2>
+        <p>
+          Every Android application requires a globally unique <code>applicationId</code> formatted in reverse-domain notation. Once your package name is registered on Google Play, it is <strong>immutable for the life of the application</strong>.
+        </p>
+
+        <h3 class="sub-heading">Naming Convention Formula</h3>
+        <p>
+          Follow the industry standard reverse-DNS structure: <code>com.&lt;organization-or-developer&gt;.&lt;appname&gt;</code>.
+        </p>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Standard</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Top-Level Domain</td>
+                <td><code>com</code>, <code>org</code>, <code>io</code></td>
+                <td><code>com</code></td>
+              </tr>
+              <tr>
+                <td>Developer Entity</td>
+                <td>Lower-case brand or domain name</td>
+                <td><code>solutions.nirali</code></td>
+              </tr>
+              <tr>
+                <td>App Identifier</td>
+                <td>Single lowercase alphanumeric noun</td>
+                <td><code>calculator</code></td>
+              </tr>
+              <tr>
+                <td><strong>Final Result</strong></td>
+                <td><strong>Lowercase alphanumeric with periods</strong></td>
+                <td><strong><code>com.solutions.nirali.calculator</code></strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-icon">💡</div>
+          <div>
+            <strong>Architecture Rule:</strong> Keep <code>namespace</code> and <code>applicationId</code> identical in modern AGP (Android Gradle Plugin 8+ / 9+) unless you are configuring multi-flavor builds. This avoids R-class lookup overhead and manifest merging friction.
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter 2 -->
+      <section class="doc-section" id="ch2">
+        <h2 class="section-heading">
+          <span class="heading-num">02</span> Production Keystore &amp; Keytool
+        </h2>
+        <p>
+          Android requires every APK or AAB to be cryptographically signed by an upload certificate. The Google Play App Signing service verifies this signature against the SHA-256 fingerprint registered in your developer account.
+        </p>
+
+        <div class="callout callout-security">
+          <div class="callout-icon">🔒</div>
+          <div>
+            <strong>Zero-Leak Security Rule:</strong> Never commit your release <code>.keystore</code> file or passwords into Git repositories. Store the keystore locally or inside encrypted CI secrets (e.g. GitHub Actions Encrypted Secrets as Base64).
+          </div>
+        </div>
+
+        <h3 class="sub-heading">Generating a 25-Year PKCS12 Release Key</h3>
+        <p>
+          Execute Java's <code>keytool</code> utility using modern AES-256 and RSA 2048-bit encryption:
+        </p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>keytool -genkeypair -v \
+  -keystore $HOME/.android/upload-release.keystore \
+  -alias $KEY_ALIAS \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000 \
+  -storetype PKCS12 \
+  -dname "CN=$APP_NAME, OU=Mobile Architecture, O=$DEVELOPER_NAME, L=San Francisco, ST=California, C=US"</code></pre>
+        </div>
+
+        <h3 class="sub-heading">Extracting the SHA-256 Fingerprint</h3>
+        <p>
+          Google Play Console asks for your upload certificate's <strong>SHA-256 fingerprint</strong> during Android Verification and App Integrity configuration. Extract it using:
+        </p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>keytool -list -v \
+  -keystore $HOME/.android/upload-release.keystore \
+  -alias $KEY_ALIAS | grep -E "SHA256:"</code></pre>
+        </div>
+      </section>
+
+      <!-- Chapter 3 -->
+      <section class="doc-section" id="ch3">
+        <h2 class="section-heading">
+          <span class="heading-num">03</span> Gradle Secrets Vault Architecture
+        </h2>
+        <p>
+          A common pitfall is committing keystore passwords into project-level <code>android/gradle.properties</code>. The professional enterprise approach isolates secrets inside user-level <code>~/.gradle/gradle.properties</code> with strict POSIX permissions.
+        </p>
+
+        <h3 class="sub-heading">1. User-Level Secrets Configuration</h3>
+        <p>Add credentials to your user directory (<code>~/.gradle/gradle.properties</code>) and restrict file permissions:</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">PROPERTIES (~/.gradle/gradle.properties)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code># User-level Gradle Vault (Never committed to Git)
+APP_UPLOAD_STORE_FILE=/Users/user/.android/upload-release.keystore
+APP_UPLOAD_KEY_ALIAS=my-app-upload-alias
+APP_UPLOAD_STORE_PASSWORD=your_secure_vault_password_here
+APP_UPLOAD_KEY_PASSWORD=your_secure_vault_password_here</code></pre>
+        </div>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">BASH (POSIX Permission Hardening)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>chmod 600 ~/.gradle/gradle.properties</code></pre>
+        </div>
+
+        <h3 class="sub-heading">2. Dynamic Resolution in <code>app/build.gradle</code></h3>
+        <p>Configure Gradle to read from properties or environment variables dynamically with fallback grace:</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">GRADLE (android/app/build.gradle)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>android {
+    ...
+    signingConfigs {
+        release {
+            def storeFilePath = project.findProperty('APP_UPLOAD_STORE_FILE') ?: System.getenv('APP_UPLOAD_STORE_FILE')
+            if (storeFilePath) {
+                storeFile file(storeFilePath)
+                storePassword project.findProperty('APP_UPLOAD_STORE_PASSWORD') ?: System.getenv('APP_UPLOAD_STORE_PASSWORD')
+                keyAlias project.findProperty('APP_UPLOAD_KEY_ALIAS') ?: System.getenv('APP_UPLOAD_KEY_ALIAS')
+                keyPassword project.findProperty('APP_UPLOAD_KEY_PASSWORD') ?: System.getenv('APP_UPLOAD_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- Chapter 4 -->
+      <section class="doc-section" id="ch4">
+        <h2 class="section-heading">
+          <span class="heading-num">04</span> Security Hardening &amp; Removing Unwanted Permissions
+        </h2>
+        <p>
+          Android libraries often merge invasive permissions silently into your final release bundle. For utilities with no ads, Google Play strictly checks whether your manifest contains advertising identifiers.
+        </p>
+
+        <h3 class="sub-heading">Blocking Hidden <code>AD_ID</code> Permissions</h3>
+        <p>
+          If your application has no ads, add <code>tools:node="remove"</code> in your <code>AndroidManifest.xml</code> to guarantee that Google Play Services Ads SDK never introduces advertising permissions:
+        </p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">XML (android/app/src/main/AndroidManifest.xml)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>&lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"&gt;
+
+    &lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+
+    &lt;!-- Block advertising ID permissions since app contains zero ads --&gt;
+    &lt;uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" /&gt;
+    &lt;uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" /&gt;
+
+    &lt;application
+        android:allowBackup="false"
+        android:supportsRtl="true"&gt;
+        ...
+    &lt;/application&gt;
+&lt;/manifest&gt;</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+          <div class="callout-icon">ℹ️</div>
+          <div>
+            <strong>Policy Advantage:</strong> Blocking <code>AD_ID</code> lets you answer <strong>"No"</strong> on Google Play Console's Advertising ID declaration, bypassing extra surveillance flags and ensuring compatibility with Google Play Families &amp; COPPA guidelines.
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter 5 -->
+      <section class="doc-section" id="ch5">
+        <h2 class="section-heading">
+          <span class="heading-num">05</span> Firebase Diagnostics &amp; Telemetry
+        </h2>
+        <p>
+          Production stability requires continuous crash reporting and diagnostic tracing. Integrating Firebase Crashlytics &amp; Analytics gives you real-time stack traces without harvesting personal identifiable information (PII).
+        </p>
+
+        <h3 class="sub-heading">Installation Checklist</h3>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>npm install @react-native-firebase/app @react-native-firebase/analytics @react-native-firebase/crashlytics</code></pre>
+        </div>
+
+        <p>Place your registered <code>google-services.json</code> into <code>android/app/google-services.json</code> and apply the Gradle plugins:</p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">GRADLE (android/build.gradle)</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>buildscript {
+    dependencies {
+        classpath 'com.google.gms:google-services:4.4.2'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.2'
+    }
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- Chapter 6 -->
+      <section class="doc-section" id="ch6">
+        <h2 class="section-heading">
+          <span class="heading-num">06</span> App Store Optimization (ASO) Mastery
+        </h2>
+        <p>
+          Google Play ranks apps using semantic keyword clustering. The algorithm assigns the highest ranking weight to your <strong>Title (30 chars max)</strong> and <strong>Short Description (80 chars max)</strong>.
+        </p>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Limit</th>
+                <th>Winning Strategy</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>App Title</strong></td>
+                <td>30 characters</td>
+                <td>Combine Brand + Primary Intent + Core Superpower (e.g. <code>Calculator: iOS Style &amp; Fast</code>)</td>
+              </tr>
+              <tr>
+                <td><strong>Short Description</strong></td>
+                <td>80 characters</td>
+                <td>Front-load high-intent keywords + pain-point resolution (e.g. <em>zero ads</em>)</td>
+              </tr>
+              <tr>
+                <td><strong>Full Description</strong></td>
+                <td>4000 characters</td>
+                <td>Structure into 4 feature pillars with 2-3% keyword density; avoid keyword stuffing lists</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Chapter 7 -->
+      <section class="doc-section" id="ch7">
+        <h2 class="section-heading">
+          <span class="heading-num">07</span> Visual Assets Matrix
+        </h2>
+        <p>
+          Google Play requires specific pixel dimensions and aspect ratios for store assets. Submitting assets outside these parameters blocks release submission.
+        </p>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset Type</th>
+                <th>Dimensions</th>
+                <th>Aspect Ratio</th>
+                <th>Format &amp; Constraint</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>App Icon</strong></td>
+                <td>512 × 512 px</td>
+                <td>1:1 square</td>
+                <td>32-bit PNG (No pre-rounded corners)</td>
+              </tr>
+              <tr>
+                <td><strong>Feature Graphic</strong></td>
+                <td>1024 × 500 px</td>
+                <td>2:1 landscape</td>
+                <td>PNG or JPEG (Keep text away from 15% edges)</td>
+              </tr>
+              <tr>
+                <td><strong>Phone Screenshots</strong></td>
+                <td>1080 × 2424 px</td>
+                <td>~9:16 or 9:20</td>
+                <td>Min 2, Max 8 screenshots (min 320px, max 3840px)</td>
+              </tr>
+              <tr>
+                <td><strong>7-inch Tablet</strong></td>
+                <td>1200 × 1920 px</td>
+                <td>9:16 portrait</td>
+                <td>Unlocks tablet featured badge on Google Play</td>
+              </tr>
+              <tr>
+                <td><strong>10-inch Tablet</strong></td>
+                <td>1600 × 2560 px</td>
+                <td>9:16 portrait</td>
+                <td>High-res large tablet layout showcase</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Chapter 8 -->
+      <section class="doc-section" id="ch8">
+        <h2 class="section-heading">
+          <span class="heading-num">08</span> Google Play Console Verification &amp; Data Safety
+        </h2>
+        <p>
+          When submitting your app, Google Play requires explicit declarations across multiple policy questionnaires.
+        </p>
+
+        <h3 class="sub-heading">Data Safety Questionnaire Cheat Sheet</h3>
+        <p>When using Firebase Crashlytics &amp; Analytics without user accounts or ads:</p>
+        
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Data Category</th>
+                <th>Collected?</th>
+                <th>Shared?</th>
+                <th>Purpose &amp; Security</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Crash logs</strong></td>
+                <td>Yes</td>
+                <td>No</td>
+                <td>App functionality, Analytics (Encrypted in transit)</td>
+              </tr>
+              <tr>
+                <td><strong>Diagnostics</strong></td>
+                <td>Yes</td>
+                <td>No</td>
+                <td>Analytics, Performance (Encrypted in transit)</td>
+              </tr>
+              <tr>
+                <td><strong>Device / Other IDs</strong></td>
+                <td>Yes</td>
+                <td>No</td>
+                <td>Pseudonymous Firebase Analytics instance ID</td>
+              </tr>
+              <tr>
+                <td><strong>All Other Categories</strong></td>
+                <td><strong>No</strong></td>
+                <td><strong>No</strong></td>
+                <td>Zero location, contacts, camera, or personal data</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Chapter 9 -->
+      <section class="doc-section" id="ch9">
+        <h2 class="section-heading">
+          <span class="heading-num">09</span> AAB Compilation, Signing Verification &amp; Rollout
+        </h2>
+        <p>
+          Compile the production Android App Bundle (<code>.aab</code>) and verify its signature before uploading:
+        </p>
+
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">BASH</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code># 1. Clean and build production bundle
+cd android && ./gradlew bundleRelease
+
+# 2. Verify signature and validity
+jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.aab | grep "jar verified"</code></pre>
+        </div>
+
+        <h3 class="sub-heading">Release Tracks Overview</h3>
+        <ul style="margin-left: 20px; color: #D1D5DB; margin-bottom: 20px;">
+          <li style="margin-bottom: 8px;"><strong>Internal Testing:</strong> Instant rollout (available in 5 minutes to up to 100 testers). Ideal for first smoke test.</li>
+          <li style="margin-bottom: 8px;"><strong>Closed Testing:</strong> Required by Google Play for new personal accounts (requires 12 or 20 opt-in testers for 14 continuous days before production application).</li>
+          <li style="margin-bottom: 8px;"><strong>Production:</strong> The public worldwide live track reviewed by Google Play Reviewers.</li>
+        </ul>
+      </section>
+
+      <!-- Interactive Checklist -->
+      <section class="doc-section" id="checklist">
+        <h2 class="section-heading">
+          <span class="heading-num">✓</span> Production Release Checklist
+        </h2>
+        <p>Click items as you complete each step to track your launch readiness:</p>
+        
+        <ul class="checklist">
+          <li class="checklist-item">
+            <input type="checkbox" id="c1">
+            <label for="c1">Globally unique <code>applicationId</code> configured in reverse-DNS format.</label>
+          </li>
+          <li class="checklist-item">
+            <input type="checkbox" id="c2">
+            <label for="c2">Release Keystore generated (PKCS12, 2048-bit RSA) and backed up securely.</label>
+          </li>
+          <li class="checklist-item">
+            <input type="checkbox" id="c3">
+            <label for="c3">Credentials moved to <code>~/.gradle/gradle.properties</code> (not in project git).</label>
+          </li>
+          <li class="checklist-item">
+            <input type="checkbox" id="c4">
+            <label for="c4">Unwanted permissions like <code>AD_ID</code> blocked via <code>tools:node="remove"</code>.</label>
+          </li>
+          <li class="checklist-item">
+            <input type="checkbox" id="c5">
+            <label for="c5">Privacy Policy deployed live with HTTPS certificate (e.g. Firebase Hosting or GitHub Pages).</label>
+          </li>
+          <li class="checklist-item">
+            <input type="checkbox" id="c6">
+            <label for="c6">Store graphical assets uploaded: 512×512 icon, 1024×500 banner, phone screenshots.</label>
+          </li>
+          <li class="checklist-item">
+            <input type="checkbox" id="c7">
+            <label for="c7">Data safety questionnaire matches integrated SDK declarations.</label>
+          </li>
+          <li class="checklist-item">
+            <input type="checkbox" id="c8">
+            <label for="c8">Production <code>app-release.aab</code> verified with <code>jarsigner</code> and uploaded.</label>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Footer -->
+      <footer class="doc-footer">
+        <div>&copy; 2026 Nirali Motka. Independent Mobile Architecture.</div>
+        <div><a href="index.html">← Back to Portfolio</a></div>
+      </footer>
+
+    </main>
+  </div>
+
+  <script>
+    // Copy Code functionality
+    function copyCode(button) {
+      const pre = button.parentElement.nextElementSibling;
+      const code = pre.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const originalText = button.innerText;
+        button.innerText = 'Copied!';
+        button.style.background = '#CDF22B';
+        button.style.color = '#0B0E14';
+        setTimeout(() => {
+          button.innerText = originalText;
+          button.style.background = '';
+          button.style.color = '';
+        }, 2000);
+      });
+    }
+
+    // Scroll spy for sidebar
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          document.querySelectorAll('.sidebar-nav a').forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('section.doc-section').forEach(section => {
+      observer.observe(section);
+    });
+  </script>
+</body>
+</html>
