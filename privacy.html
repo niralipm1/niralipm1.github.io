@@ -130,13 +130,14 @@
     </div>
 
     <div class="card">
-      <h2>2. Data Collection & Permissions</h2>
-      <p>The App operates with strictly minimal device permissions:</p>
+      <h2>2. Diagnostics, Analytics & Permissions</h2>
+      <p>The App operates with minimal permissions and transparent diagnostics:</p>
       <ul>
-        <li><strong>No Account Required:</strong> You never need to log in, register, or provide an email, phone number, or identity.</li>
-        <li><strong>No Telemetry or Analytics:</strong> The App does not integrate third-party ad networks, trackers, Firebase Analytics, or user profiling SDKs.</li>
-        <li><strong>No Device Identifier Collection:</strong> We do not read or store Android Advertising ID (AAID), IMEI, MAC address, or serial numbers.</li>
-        <li><strong>Camera, Contacts, Location:</strong> Never requested. The App will never request access to your camera, photos, contacts, location, or microphone.</li>
+        <li><strong>No Account Required:</strong> You never need to log in, register, or provide an email, phone number, or personal identity.</li>
+        <li><strong>Crash Reporting (Firebase Crashlytics):</strong> We integrate Google Firebase Crashlytics to monitor app stability and unexpected errors. Diagnostic stack traces, OS version, and device model are logged strictly to resolve bugs and prevent crashes. No personal data or calculation numbers are attached to crash reports.</li>
+        <li><strong>Anonymous Usage Metrics (Firebase Analytics):</strong> We use Google Firebase Analytics to monitor aggregated feature adoption (such as screen transitions and currency conversion utility) to improve usability. All metrics are pseudonymous and aggregated.</li>
+        <li><strong>Data Security & Retention:</strong> All diagnostics are encrypted in transit via HTTPS/TLS and processed securely via Google Firebase infrastructure. No data is ever sold or shared with advertising networks.</li>
+        <li><strong>Sensitive Hardware Access:</strong> Camera, microphone, contacts, and GPS location are NEVER requested or accessed.</li>
       </ul>
     </div>
 
