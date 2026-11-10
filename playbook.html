@@ -1030,6 +1030,48 @@ jarsigner -verify -verbose -certs app/build/outputs/bundle/release/app-release.a
         </ul>
       </section>
 
+      <!-- Common Traps & Troubleshooting -->
+      <section class="doc-section" id="troubleshooting">
+        <h2 class="section-heading">
+          <span class="heading-num">!</span> Battle-Tested Troubleshooting &amp; Common Traps
+        </h2>
+        <p>
+          Real-world edge cases encountered during Google Play Console submissions and how to resolve them in seconds:
+        </p>
+
+        <h3 class="sub-heading">Trap 1: "You can't rollout this release because it doesn't allow any existing users to upgrade..."</h3>
+        <p>
+          <strong>Why this occurs:</strong> Google Play enforces a strict ascending integer rule for <code>versionCode</code>. If you previously created an internal draft or release with <code>versionCode 1</code>, uploading another bundle with <code>versionCode 1</code> is permanently rejected.
+        </p>
+        <p>
+          <strong>The Fix:</strong> Open <code>android/app/build.gradle</code>, increment <code>versionCode</code> (e.g. from <code>1</code> to <code>2</code>), update <code>versionName "1.0.1"</code>, and re-run <code>./gradlew bundleRelease</code>.
+        </p>
+
+        <h3 class="sub-heading">Trap 2: "This release does not add or remove any app bundles"</h3>
+        <p>
+          <strong>Why this occurs:</strong> Clicking "Next" or "Save" before the file upload reaches 100%. The release draft is saved with 0 attached packages.
+        </p>
+        <p>
+          <strong>The Fix:</strong> Drop your <code>.aab</code> into the upload area and wait until the green completion card displays: <code>com.your.app (X) · XX MB</code> before clicking Next.
+        </p>
+
+        <h3 class="sub-heading">Trap 3: Advertising ID Rejection on "No Ads" Apps</h3>
+        <p>
+          <strong>Why this occurs:</strong> Third-party libraries like Firebase Analytics silently merge <code>com.google.android.gms.permission.AD_ID</code> into the final manifest. If you declare "No ads", Google Play's automated manifest scanner flags a contradiction.
+        </p>
+        <p>
+          <strong>The Fix:</strong> Force-remove the permission in <code>android/app/src/main/AndroidManifest.xml</code> using:
+        </p>
+        <div class="code-container">
+          <div class="code-header">
+            <span class="code-lang">XML</span>
+            <button class="btn-copy" onclick="copyCode(this)">Copy</button>
+          </div>
+          <pre><code>&lt;uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" /&gt;
+&lt;uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" /&gt;</code></pre>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer class="doc-footer">
         <div>&copy; 2026 Nirali Motka. Independent Mobile Architecture.</div>
